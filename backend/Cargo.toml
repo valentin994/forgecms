@@ -8,3 +8,6 @@ author = ["Valentin Vareskic <valentin.vareskic@gmail.com>"]
 
 [dependencies]
 axum = "0.7.5"
+serde = { version = "1.0.197", features = ["derive"] }
+tokio = { version = "1.37.0", features = ["full"] }
+tracing-subscriber = "0.3.18"
