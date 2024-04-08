@@ -10,4 +10,5 @@ author = ["Valentin Vareskic <valentin.vareskic@gmail.com>"]
 axum = "0.7.5"
 serde = { version = "1.0.197", features = ["derive"] }
 tokio = { version = "1.37.0", features = ["full"] }
+tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
