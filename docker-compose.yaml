@@ -1,0 +1,35 @@
+name: forge-cms
+services:
+  backend:
+    build:
+      context: backend
+      target: development
+    environment:
+      - ADDRESS=0.0.0.0:8000
+      - RUST_LOG=debug
+      - PG_DBNAME=postgres
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=mysecretpassword
+    networks:
+      - server-side
+    volumes:
+      - ./backend/src:/code/src
+      - backend-cache:/code/target
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16.2-alpine3.19
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+    networks:
+      - server-side
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+networks:
+  server-side: {}
