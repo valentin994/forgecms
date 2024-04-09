@@ -20,6 +20,9 @@ jobs:
       run: |
         cd backend 
         ls
-        cargo run 
+        cargo run &
+
     - name: Run tests
-      run: cd ./backend & cargo test --verbose
+      run: |
+        cd ./backend 
+        cargo test --verbose
