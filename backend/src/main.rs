@@ -1,6 +1,4 @@
-use axum::{
-    routing::get, Router,
-};
+use axum::{routing::get, Router};
 use tokio::net::TcpListener;
 
 #[tokio::main]
@@ -13,7 +11,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root));
-        // `POST /users` goes to `create_user`
+    // `POST /users` goes to `create_user`
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
@@ -24,4 +22,3 @@ async fn root() -> &'static str {
     tracing::debug!("hello");
     "Hello, World!"
 }
-
