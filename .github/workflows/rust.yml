@@ -16,11 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Go to backend
+    - name: Build and run API
       run: |
         cd backend 
         ls
-    - name: Build and run API
-      run: cd ./backend & cargo run --verbose
+        cargo run 
     - name: Run tests
       run: cd ./backend & cargo test --verbose
