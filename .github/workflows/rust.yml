@@ -20,7 +20,7 @@ jobs:
       run: |
         cd ./backend
         cargo fmt
-        cargo-check
+        cargo check
         cargo clippy
 
   build:
