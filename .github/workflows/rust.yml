@@ -10,8 +10,21 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  pre-build:
+    name: Format & Lint
+    runs-on: ubuntu-latest
 
+    steps: 
+    - uses: actions/checkout@v3
+    - name: Format
+      run: cargo fmt
+    - name: Lint
+      run: |
+        cargo-check
+        cargo clippy
+
+  build:
+    name: Integration Tests
     runs-on: ubuntu-latest
 
     steps:
