@@ -3,7 +3,6 @@ services:
   backend:
     build:
       context: backend
-      target: development
     environment:
       - ADDRESS=0.0.0.0:8000
       - RUST_LOG=debug
@@ -15,9 +14,10 @@ services:
       - server-side
     volumes:
       - ./backend/src:/code/src
-      - backend-cache:/code/target
     depends_on:
       - db
+    ports:
+      - 3000:3000
 
   db:
     image: postgres:16.2-alpine3.19
@@ -28,8 +28,6 @@ services:
       - server-side
     ports:
       - 5432:5432
-    volumes:
-      - db-data:/var/lib/postgresql/data
 
 networks:
   server-side: {}
