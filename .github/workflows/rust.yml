@@ -31,8 +31,4 @@ jobs:
         cd backend 
         ls
         cargo run &
-
-    - name: Run tests
-      run: |
-        cd ./backend 
         cargo test --verbose
