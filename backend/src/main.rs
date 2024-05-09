@@ -1,6 +1,6 @@
 use axum::{routing::get, Router};
 use tokio::net::TcpListener;
-use sqlx::{migrate::Migrator, postgres::{PgPool, PgPoolOptions}};
+use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 use std::time::Duration;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
