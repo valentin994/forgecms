@@ -14,8 +14,8 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
     // initialize database
-    let db_connection_str = std::env::var("localhost:5432")
-        .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@localhost:5432".to_string());
+    let db_connection_str = std::env::var("127.0.0.1:5432")
+        .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@db:5432".to_string());
     let pool = PgPoolOptions::new()
         .max_connections(DB_MAX_CONNECTIONS)
         .acquire_timeout(DB_CONNECTION_TIMEOUT)
@@ -31,7 +31,7 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         .with_state(pool);
-    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }

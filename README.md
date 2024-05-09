@@ -40,6 +40,10 @@ When starting the application you will have these tables created:
 
 If you want to add more tables you can do that with the [sqlx-cli](https://crates.io/crates/sqlx-cli). 
 
+## CICD
+The projects uses GitHub Actions for delivery. We are running two jobs, one is [clippy](https://doc.rust-lang.org/nightly/clippy/continuous_integration/github_actions.html) for lint and format.
+The other job is Integration test, in which we test every route on a dummy server.
+
 
 ## Contributions
 If you want to contribute you are more than welcome. Please open a pull request and write tests for your PR.

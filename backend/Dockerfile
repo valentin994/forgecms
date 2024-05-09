@@ -18,6 +18,7 @@ RUN cargo build --release --bin forgecms
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt install -y openssl
 WORKDIR app
 COPY --from=builder /app/target/release/forgecms /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/forgecms"]
