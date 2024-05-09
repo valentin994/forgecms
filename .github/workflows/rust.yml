@@ -8,30 +8,17 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
-  pre-build:
-    name: Format & Lint
-    runs-on: ubuntu-latest
-
-    steps: 
-    - uses: actions/checkout@v3
-    - name: Format and Lint
-      run: |
-        cd ./backend
-        cargo fmt
-        cargo check
-        cargo clippy
-
   clippy_check:
-    runs-on: ubuntu-latest
+   runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - run: rustup component add clippy
-    - uses: actions-rs/clippy-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        args: --all-features
+      - uses: actions/checkout@v4
+      - name: Run Clippy
+        run: |
+        cd backend
+        cargo clippy --all-targets --all-features
 
   build:
     name: Integration Tests
