@@ -12,11 +12,11 @@ env:
 
 jobs:
   clippy_check:
-   runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run Clippy
-        run: |
+    - uses: actions/checkout@v4
+    - name: Run Clippy
+      run: |
         cd backend
         cargo clippy --all-targets --all-features
 
