@@ -27,7 +27,7 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: mysecretpassword
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -38,6 +38,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build and run API
+      env:
+        DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
       run: |
         cd backend 
         cargo run &

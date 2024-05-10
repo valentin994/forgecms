@@ -1,11 +1,11 @@
 use axum::{routing::get, Router};
-use tokio::net::TcpListener;
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 use std::time::Duration;
+use tokio::net::TcpListener;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
-static MIGRATOR: Migrator = sqlx::migrate!(); 
+static MIGRATOR: Migrator = sqlx::migrate!();
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +14,7 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
     // initialize database
-    let db_connection_str = std::env::var("127.0.0.1:5432")
+    let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@db:5432".to_string());
     let pool = PgPoolOptions::new()
         .max_connections(DB_MAX_CONNECTIONS)
