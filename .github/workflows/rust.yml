@@ -8,34 +8,38 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
-  pre-build:
-    name: Format & Lint
+  clippy_check:
     runs-on: ubuntu-latest
-
-    steps: 
-    - uses: actions/checkout@v3
-    - name: Format and Lint
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run Clippy
       run: |
-        cd ./backend
-        cargo fmt
-        cargo check
-        cargo clippy
+        cd backend
+        cargo clippy --all-targets --all-features
 
-  build:
+  test:
     name: Integration Tests
     runs-on: ubuntu-latest
-
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: mysecretpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build and run API
+      env:
+        DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
       run: |
         cd backend 
-        ls
-        cargo run &
-
-    - name: Run tests
-      run: |
-        cd ./backend 
-        cargo test --verbose
+        cargo run & cargo test

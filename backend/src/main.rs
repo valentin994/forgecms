@@ -1,5 +1,11 @@
 use axum::{routing::get, Router};
+use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
+use std::time::Duration;
 use tokio::net::TcpListener;
+
+const DB_MAX_CONNECTIONS: u32 = 10;
+const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
+static MIGRATOR: Migrator = sqlx::migrate!();
 
 #[tokio::main]
 async fn main() {
@@ -7,12 +13,25 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
+    // initialize database
+    let db_connection_str = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@db:5432".to_string());
+    let pool = PgPoolOptions::new()
+        .max_connections(DB_MAX_CONNECTIONS)
+        .acquire_timeout(DB_CONNECTION_TIMEOUT)
+        .connect(&db_connection_str)
+        .await
+        .expect("can't connect to database");
+
+    MIGRATOR.run(&pool).await.unwrap();
+    tracing::debug!("Database initialized and migrated");
+
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
-        .route("/", get(root));
-    // `POST /users` goes to `create_user`
-    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+        .route("/", get(root))
+        .with_state(pool);
+    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
