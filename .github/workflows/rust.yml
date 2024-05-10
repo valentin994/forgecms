@@ -42,9 +42,4 @@ jobs:
         DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
       run: |
         cd backend 
-        cargo run &
-    - uses: actions/checkout@v4
-    - name: Test API
-      run: |
-        cd backend
-        cargo test
+        cargo run & cargo test
