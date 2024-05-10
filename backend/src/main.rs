@@ -1,7 +1,10 @@
 use axum::{routing::get, Router};
+use routes::reviews::review_router;
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 use std::time::Duration;
 use tokio::net::TcpListener;
+
+pub mod routes;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
@@ -25,12 +28,10 @@ async fn main() {
 
     MIGRATOR.run(&pool).await.unwrap();
     tracing::debug!("Database initialized and migrated");
-
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
         .route("/", get(root))
-        .with_state(pool);
+        .nest("/review", review_router(pool).await);
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
