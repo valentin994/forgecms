@@ -1,5 +1,5 @@
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     http::StatusCode,
     routing::{get, post},
     Json, Router,
@@ -14,13 +14,25 @@ pub async fn review_router(pool: PgPool) -> Router {
         .with_state(pool)
 }
 
-async fn create_review(Json(_payload): Json<CreateReview>) -> (StatusCode, Json<Review>) {
+async fn create_review(State(pool): State<PgPool> ,Json(payload): Json<CreateReview>) -> (StatusCode, Json<Review>) {
     let review = Review {
         id: 1,
         name: "Hello".to_string(),
         review: "World".to_string(),
     };
-
+    tracing::debug!("Payload: name: {}, review: {}", &payload.name, &payload.review);
+    let res = sqlx::query_as!(
+        Review,
+        r#"INSERT INTO reviews
+        (name, review)
+        VALUES ($1, $2)
+        RETURNING id, name, review"#,
+        payload.name,
+        payload.review
+    )
+    .fetch_one(&pool)
+    .await;
+    tracing::debug!("{res:?}");
     tracing::debug!("Created a review!");
     (StatusCode::CREATED, Json(review))
 }
@@ -35,15 +47,15 @@ async fn read_review(Path(id): Path<u64>) -> (StatusCode, Json<Review>) {
     (StatusCode::OK, Json(review))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct CreateReview {
     name: String,
     review: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct Review {
-    id: u64,
+    id: i64,
     name: String,
     review: String,
 }
