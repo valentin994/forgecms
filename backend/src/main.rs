@@ -1,10 +1,13 @@
-use axum::{routing::get, Router};
+use crate::error::internal_error;
+use axum::{response::IntoResponse, routing::get, Router};
+use reqwest::StatusCode;
 use routes::reviews::review_router;
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 use std::time::Duration;
 use tokio::net::TcpListener;
 
-pub mod routes;
+mod error;
+mod routes;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
@@ -31,14 +34,25 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(root))
-        .nest("/review", review_router(pool).await);
+        .nest("/review", review_router(pool).await)
+        .fallback(handler_404);
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .await
+        .map_err(internal_error)
+        .unwrap();
 }
 
 // basic handler that responds with a static string
 async fn root() -> &'static str {
     tracing::debug!("hello");
     "Hello, World!"
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        "The requested resource was not found",
+    )
 }

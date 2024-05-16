@@ -31,8 +31,8 @@ async fn get_review() {
 #[tokio::test]
 async fn create_review() {
     let mut map = HashMap::new();
-    map.insert("name", "hello"); 
-    map.insert("review", "world"); 
+    map.insert("name", "hello");
+    map.insert("review", "world");
     let client = reqwest::Client::new();
     let res = client
         .post("http://127.0.0.1:3000/review")
