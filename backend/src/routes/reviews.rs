@@ -1,8 +1,5 @@
 use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    routing::{get, post},
-    Json, Router,
+    extract::{Path, State}, http::StatusCode, response::IntoResponse, routing::{get, post}, Json, Router
 };
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPool;
@@ -12,6 +9,7 @@ pub async fn review_router(pool: PgPool) -> Router {
         .route("/", post(create_review))
         .route("/", get(get_all_reviews))
         .route("/:id", get(read_review))
+        .fallback(handler_404)
         .with_state(pool)
 }
 
@@ -61,6 +59,13 @@ async fn get_all_reviews(State(pool): State<PgPool>) -> (StatusCode, Json<Vec<Re
     tracing::debug!("Fetched all reviews!");
     (StatusCode::OK, Json(res))
 
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        "The requested resource was not found",
+    )
 }
 
 #[derive(Deserialize, Debug)]
