@@ -7,6 +7,7 @@ use serde_json::json;
 pub enum AppError {
     InternalServerError,
     BodyParsingError(String),
+    MissingResource(String),
 }
 
 pub fn internal_error<E>(_err: E) -> AppError {
@@ -23,6 +24,10 @@ impl IntoResponse for AppError {
             Self::BodyParsingError(message) => (
                 StatusCode::BAD_REQUEST,
                 format!("Bad request error: {}", message),
+            ),
+            Self::MissingResource(message) => (
+                StatusCode::NOT_FOUND,
+                format!("Resource can't be found: {}", message),
             ),
         };
         (status, Json(json!({ "message": err_msg }))).into_response()

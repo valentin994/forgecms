@@ -2,7 +2,7 @@ use axum::{
     extract::{rejection::JsonRejection, Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::{get, post, patch},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,7 @@ pub async fn review_router(pool: PgPool) -> Router {
         .route("/", post(create_review))
         .route("/", get(get_all_reviews))
         .route("/:id", get(read_review))
+        .route("/:id", patch(update_review))
         .fallback(handler_404)
         .with_state(pool)
 }
@@ -46,35 +47,91 @@ async fn create_review(
             tracing::debug!("Created a review!");
             Ok((StatusCode::CREATED, Json(res)))
         }
-        Err(_) => Err(AppError::BodyParsingError("Unable to process the body".to_string())),
+        Err(_) => Err(AppError::BodyParsingError(
+            "Unable to process the body".to_string(),
+        )),
     }
 }
 
 async fn read_review(
     State(pool): State<PgPool>,
     Path(id): Path<i64>,
-) -> (StatusCode, Json<Review>) {
+) -> Result<(StatusCode, Json<Review>), AppError> {
     tracing::debug!("Fetching review with id {}", &id);
-    let res = sqlx::query_as!(
+    match sqlx::query_as!(
         Review,
         r#"SELECT id, name, review FROM reviews WHERE id = $1"#,
         id
     )
     .fetch_one(&pool)
     .await
-    .expect("Can't fetch review");
-    tracing::debug!("Fetched review! - {res:?}");
-    (StatusCode::OK, Json(res))
+    {
+        Ok(res) => {
+            tracing::debug!("Fetched review! - {res:?}");
+            Ok((StatusCode::OK, Json(res)))
+        }
+        Err(e) => {
+            tracing::error!("Encountered error: {}", e);
+            Err(AppError::MissingResource(format!(
+                "Can't find review with id {}",
+                id
+            )))
+        }
+    }
 }
 
-async fn get_all_reviews(State(pool): State<PgPool>) -> (StatusCode, Json<Vec<Review>>) {
+async fn update_review(
+    State(pool): State<PgPool>,
+    Path(id): Path<i64>,
+    payload: Result<Json<UpdateReviw>, JsonRejection>,
+) -> Result<(StatusCode, Json<Review>), AppError> {
+    match payload {
+        Ok(payload) => {
+            let res = sqlx::query_as!(
+                Review,
+                r#"SELECT id, name, review FROM reviews WHERE id = $1"#,
+                id
+                ).fetch_one(&pool)
+                .await
+                .expect("hell no");
+            tracing::debug!("Fetched the original review: {res:?}");
+            
+            let update = sqlx::query_as!(
+                Review,
+                r#"UPDATE reviews SET name = $1, review = $2 WHERE id = $3 RETURNING id, name, review"#,
+                payload.name.unwrap_or(&res.name),
+                payload.review.unwrap_or(&res.review),
+                id
+                ).fetch_one(&pool)
+                .await
+                .expect("error");
+
+            Ok((StatusCode::OK, Json(update)))
+        },
+        Err(e) => {
+            tracing::error!("Ecnountered error: {}", e);
+            Err(AppError::InternalServerError)
+        }
+    }
+}
+
+async fn get_all_reviews(
+    State(pool): State<PgPool>,
+) -> Result<(StatusCode, Json<Vec<Review>>), AppError> {
     tracing::debug!("Getting all reviews");
-    let res = sqlx::query_as!(Review, r#"SELECT * FROM reviews"#)
+    match sqlx::query_as!(Review, r#"SELECT * FROM reviews"#)
         .fetch_all(&pool)
         .await
-        .expect("");
-    tracing::debug!("Fetched all reviews!");
-    (StatusCode::OK, Json(res))
+    {
+        Ok(res) => {
+            tracing::debug!("Fetched all reviews!");
+            Ok((StatusCode::OK, Json(res)))
+        }
+        Err(e) => {
+            tracing::error!("Encountered error: {}", e);
+            Err(AppError::InternalServerError)
+        }
+    }
 }
 
 async fn handler_404() -> impl IntoResponse {
@@ -88,6 +145,12 @@ async fn handler_404() -> impl IntoResponse {
 struct CreateReview {
     name: String,
     review: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct UpdateReviw {
+    name: Option<String>,
+    review: Option<String>
 }
 
 #[derive(Serialize, Debug)]
