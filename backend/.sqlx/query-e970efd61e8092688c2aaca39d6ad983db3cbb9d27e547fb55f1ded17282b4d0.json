@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO reviews\n        (name, review)\n        VALUES ($1, $2)\n        RETURNING id, name, review",
+  "query": "INSERT INTO reviews\n            (name, review)\n            VALUES ($1, $2)\n            RETURNING id, name, review",
   "describe": {
     "columns": [
       {
@@ -31,5 +31,5 @@
       false
     ]
   },
-  "hash": "9c582567550fb2e699ddc8fe0865e259f2862c68cdc5b16971511a065a79f2e6"
+  "hash": "e970efd61e8092688c2aaca39d6ad983db3cbb9d27e547fb55f1ded17282b4d0"
 }

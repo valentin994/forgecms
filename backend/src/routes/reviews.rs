@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::{rejection::JsonRejection, Path, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
@@ -7,6 +7,8 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPool;
+
+use crate::error::AppError;
 
 pub async fn review_router(pool: PgPool) -> Router {
     Router::new()
@@ -19,36 +21,32 @@ pub async fn review_router(pool: PgPool) -> Router {
 
 async fn create_review(
     State(pool): State<PgPool>,
-    payload: Option<Json<CreateReview>>,
-) -> Result<(StatusCode, Json<Review>), (StatusCode, Json<ErrorResponse>)> {
-    if let Some(payload) = payload{
-        tracing::debug!(
-            "Payload: name: {}, review: {}",
-            &payload.name,
-            &payload.review
-        );
-        // let res = sqlx::query_as!(
-        //     Review,
-        //     r#"INSERT INTO reviews
-        //     (name, review)
-        //     VALUES ($1, $2)
-        //     RETURNING id, name, review"#,
-        //     payload.name,
-        //     payload.review
-        // )
-        // .fetch_one(&pool)
-        // .await
-        // .expect("Can't insert into database");
-        let res = Review{
-            id: 1,
-            name: "x".to_string(),
-            review: "x".to_string()
-        };
-        tracing::debug!("{res:?}");
-        tracing::debug!("Created a review!");
-        Ok((StatusCode::CREATED, Json(res)))
-    }else{
-        Err((StatusCode::BAD_REQUEST, Json(ErrorResponse{message: "Unable to process body".to_string()})))
+    payload: Result<Json<CreateReview>, JsonRejection>,
+) -> Result<(StatusCode, Json<Review>), AppError> {
+    match payload {
+        Ok(payload) => {
+            tracing::debug!(
+                "Payload: name: {}, review: {}",
+                &payload.name,
+                &payload.review
+            );
+            let res = sqlx::query_as!(
+                Review,
+                r#"INSERT INTO reviews
+            (name, review)
+            VALUES ($1, $2)
+            RETURNING id, name, review"#,
+                payload.name,
+                payload.review
+            )
+            .fetch_one(&pool)
+            .await
+            .expect("Can't insert into database");
+            tracing::debug!("{res:?}");
+            tracing::debug!("Created a review!");
+            Ok((StatusCode::CREATED, Json(res)))
+        }
+        Err(_) => Err(AppError::BodyParsingError("Unable to process the body".to_string())),
     }
 }
 
@@ -97,10 +95,4 @@ struct Review {
     id: i64,
     name: String,
     review: String,
-}
-
-
-#[derive(Serialize, Debug)]
-struct ErrorResponse {
-    message: String
 }
