@@ -36,7 +36,7 @@ async fn create_review(
                 r#"INSERT INTO reviews
             (name, review)
             VALUES ($1, $2)
-            RETURNING id, name, review"#,
+            RETURNING id, name, review;"#,
                 payload.name,
                 payload.review
             )
@@ -98,9 +98,9 @@ async fn update_review(
             
             let update = sqlx::query_as!(
                 Review,
-                r#"UPDATE reviews SET name = $1, review = $2 WHERE id = $3 RETURNING id, name, review"#,
-                payload.name.unwrap_or(&res.name),
-                payload.review.unwrap_or(&res.review),
+                r#"UPDATE reviews SET name = $1, review = $2 WHERE id = $3 RETURNING id, name, review;"#,
+                payload.name.clone().unwrap_or(res.name),
+                payload.review.clone().unwrap_or(res.review),
                 id
                 ).fetch_one(&pool)
                 .await

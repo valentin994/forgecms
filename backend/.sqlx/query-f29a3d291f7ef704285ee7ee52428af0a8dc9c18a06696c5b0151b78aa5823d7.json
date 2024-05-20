@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO reviews\n            (name, review)\n            VALUES ($1, $2)\n            RETURNING id, name, review",
+  "query": "UPDATE reviews SET name = $1, review = $2 WHERE id = $3 RETURNING id, name, review;",
   "describe": {
     "columns": [
       {
@@ -22,7 +22,8 @@
     "parameters": {
       "Left": [
         "Varchar",
-        "Varchar"
+        "Varchar",
+        "Int8"
       ]
     },
     "nullable": [
@@ -31,5 +32,5 @@
       false
     ]
   },
-  "hash": "e970efd61e8092688c2aaca39d6ad983db3cbb9d27e547fb55f1ded17282b4d0"
+  "hash": "f29a3d291f7ef704285ee7ee52428af0a8dc9c18a06696c5b0151b78aa5823d7"
 }
