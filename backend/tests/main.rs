@@ -43,5 +43,41 @@ async fn create_review() {
         .text()
         .await
         .unwrap();
-    assert_eq!(res, "{\"id\":1,\"name\":\"Hello\",\"review\":\"World\"}")
+    assert_eq!(res, "{\"id\":1,\"name\":\"hello\",\"review\":\"world\"}")
 }
+
+
+#[tokio::test]
+async fn update_review() {
+    let mut map = HashMap::new();
+    map.insert("name", "hello");
+    map.insert("review", "world2");
+    let client = reqwest::Client::new();
+    let res = client
+        .patch("http://127.0.0.1:3000/review/1")
+        .json(&map)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert_eq!(res, "{\"id\":1,\"name\":\"hello\",\"review\":\"world2\"}")
+}
+
+
+#[tokio::test]
+async fn delete_review() {
+    let client = reqwest::Client::new();
+    let res = client
+        .delete("http://127.0.0.1:3000/review/1")
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert_eq!(res, "Deleted review with id: 1".to_string())
+}
+
+
