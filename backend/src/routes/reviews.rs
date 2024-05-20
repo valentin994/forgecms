@@ -2,7 +2,7 @@ use axum::{
     extract::{rejection::JsonRejection, Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post, patch},
+    routing::{get, patch, post, delete},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,7 @@ pub async fn review_router(pool: PgPool) -> Router {
         .route("/", get(get_all_reviews))
         .route("/:id", get(read_review))
         .route("/:id", patch(update_review))
+        .route("/:id", delete(delete_review))
         .fallback(handler_404)
         .with_state(pool)
 }
@@ -91,11 +92,11 @@ async fn update_review(
                 Review,
                 r#"SELECT id, name, review FROM reviews WHERE id = $1"#,
                 id
-                ).fetch_one(&pool)
-                .await
-                .expect("hell no");
+            )
+            .fetch_one(&pool)
+            .await
+            .expect("hell no");
             tracing::debug!("Fetched the original review: {res:?}");
-            
             let update = sqlx::query_as!(
                 Review,
                 r#"UPDATE reviews SET name = $1, review = $2 WHERE id = $3 RETURNING id, name, review;"#,
@@ -107,9 +108,31 @@ async fn update_review(
                 .expect("error");
 
             Ok((StatusCode::OK, Json(update)))
-        },
+        }
         Err(e) => {
             tracing::error!("Ecnountered error: {}", e);
+            Err(AppError::InternalServerError)
+        }
+    }
+}
+
+async fn delete_review(
+    State(pool): State<PgPool>,
+    Path(id): Path<i64>,
+) -> Result<(StatusCode, String), AppError> {
+    match sqlx::query_as!(Review, r#"DELETE FROM reviews where id = $1 RETURNING *"#, id)
+        .fetch_one(&pool)
+        .await
+    {
+        Ok(_res) => {
+            tracing::debug!("Deleted review with id {}", id);
+            Ok((
+                StatusCode::OK,
+                format!("Deleted review with id: {id}")
+            ))
+        }
+        Err(e) => {
+            tracing::debug!("Failed to delte review with id {} and error {}", id, e);
             Err(AppError::InternalServerError)
         }
     }
@@ -150,7 +173,7 @@ struct CreateReview {
 #[derive(Deserialize, Debug)]
 struct UpdateReviw {
     name: Option<String>,
-    review: Option<String>
+    review: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
