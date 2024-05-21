@@ -42,6 +42,7 @@ jobs:
         DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
       run: |
         cd backend 
+        cargo build 
         cargo add sqlx-cli
         cargo sqlx prepare
         cargo run & cargo test
