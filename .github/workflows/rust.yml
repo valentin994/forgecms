@@ -52,4 +52,5 @@ jobs:
         cd backend 
         cargo build 
         cargo sqlx prepare
-        cargo run & cargo test
+        cargo run & 
+        cargo test
