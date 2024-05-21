@@ -37,13 +37,19 @@ jobs:
           - 5432:5432
     steps:
     - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Migrate Database
+      env:
+        DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
+      run: |
+        cd backend
+        cargo install sqlx-cli --features postgres
+        sqlx migrate run
     - name: Build and run API
       env:
         DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432
       run: |
         cd backend 
-        cargo install sqlx-cli --features postgres
-        slqx migrate run
         cargo build 
         cargo sqlx prepare
         cargo run & cargo test
