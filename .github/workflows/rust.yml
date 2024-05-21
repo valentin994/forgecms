@@ -44,5 +44,6 @@ jobs:
         cd backend 
         cargo build 
         cargo add sqlx-cli
+        slqx migrate run
         cargo sqlx prepare
         cargo run & cargo test
