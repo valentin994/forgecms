@@ -43,7 +43,7 @@ jobs:
       run: |
         cd backend 
         cargo install sqlx-cli
-        slqx migrate run
+        cargo-slqx migrate run
         cargo build 
         cargo sqlx prepare
         cargo run & cargo test
