@@ -1,5 +1,5 @@
-use forgecms::error::internal_error;
 use axum::{response::IntoResponse, routing::get, Router};
+use forgecms::error::internal_error;
 use reqwest::StatusCode;
 use routes::reviews::review_router;
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions};

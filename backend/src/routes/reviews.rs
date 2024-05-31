@@ -2,7 +2,7 @@ use axum::{
     extract::{rejection::JsonRejection, Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, patch, post, delete},
+    routing::{delete, get, patch, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -120,16 +120,17 @@ async fn delete_review(
     State(pool): State<PgPool>,
     Path(id): Path<i64>,
 ) -> Result<(StatusCode, String), AppError> {
-    match sqlx::query_as!(Review, r#"DELETE FROM reviews where id = $1 RETURNING *"#, id)
-        .fetch_one(&pool)
-        .await
+    match sqlx::query_as!(
+        Review,
+        r#"DELETE FROM reviews where id = $1 RETURNING *"#,
+        id
+    )
+    .fetch_one(&pool)
+    .await
     {
         Ok(_res) => {
             tracing::debug!("Deleted review with id {}", id);
-            Ok((
-                StatusCode::OK,
-                format!("Deleted review with id: {id}")
-            ))
+            Ok((StatusCode::OK, format!("Deleted review with id: {id}")))
         }
         Err(e) => {
             tracing::debug!("Failed to delte review with id {} and error {}", id, e);
