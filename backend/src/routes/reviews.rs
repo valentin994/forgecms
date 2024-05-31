@@ -165,7 +165,7 @@ async fn handler_404() -> impl IntoResponse {
 }
 
 #[derive(Deserialize, Debug)]
-struct CreateReview {
+pub struct CreateReview {
     name: String,
     review: String,
 }
@@ -176,9 +176,9 @@ struct UpdateReviw {
     review: Option<String>,
 }
 
-#[derive(Serialize, Debug)]
-struct Review {
-    id: i64,
-    name: String,
-    review: String,
+#[derive(Deserialize, Serialize, PartialEq, Eq, Debug)]
+pub struct Review {
+    pub id: i64,
+    pub name: String,
+    pub review: String,
 }

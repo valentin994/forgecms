@@ -1,4 +1,4 @@
-use crate::error::internal_error;
+use forgecms::error::internal_error;
 use axum::{response::IntoResponse, routing::get, Router};
 use reqwest::StatusCode;
 use routes::reviews::review_router;
@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio::net::TcpListener;
 
 mod error;
-mod routes;
+pub mod routes;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
