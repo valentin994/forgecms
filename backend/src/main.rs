@@ -8,6 +8,8 @@ use tokio::net::TcpListener;
 mod error;
 pub mod routes;
 
+use error::internal_error;
+
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 static MIGRATOR: Migrator = sqlx::migrate!();

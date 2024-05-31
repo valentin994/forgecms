@@ -10,9 +10,9 @@ pub enum AppError {
     MissingResource(String),
 }
 
-// pub fn internal_error<E>(_err: E) -> AppError {
-//     AppError::InternalServerError
-// }
+pub fn internal_error<E>(_err: E) -> AppError {
+    AppError::InternalServerError
+}
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
