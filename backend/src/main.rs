@@ -1,7 +1,14 @@
-use axum::{routing::get, Router};
+use axum::{response::IntoResponse, routing::get, Router};
+use reqwest::StatusCode;
+use routes::reviews::review_router;
 use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 use std::time::Duration;
 use tokio::net::TcpListener;
+
+mod error;
+pub mod routes;
+
+use error::internal_error;
 
 const DB_MAX_CONNECTIONS: u32 = 10;
 const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
@@ -16,6 +23,7 @@ async fn main() {
     // initialize database
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@db:5432".to_string());
+    tracing::info!("Database URL: {:?}", &db_connection_str);
     let pool = PgPoolOptions::new()
         .max_connections(DB_MAX_CONNECTIONS)
         .acquire_timeout(DB_CONNECTION_TIMEOUT)
@@ -25,19 +33,28 @@ async fn main() {
 
     MIGRATOR.run(&pool).await.unwrap();
     tracing::debug!("Database initialized and migrated");
-
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
         .route("/", get(root))
-        .with_state(pool);
+        .nest("/review", review_router(pool).await)
+        .fallback(handler_404);
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .await
+        .map_err(internal_error)
+        .unwrap();
 }
 
 // basic handler that responds with a static string
 async fn root() -> &'static str {
     tracing::debug!("hello");
     "Hello, World!"
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        "The requested resource was not found",
+    )
 }
