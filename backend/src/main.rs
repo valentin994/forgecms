@@ -23,6 +23,7 @@ async fn main() {
     // initialize database
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:mysecretpassword@db:5432".to_string());
+    tracing::info!("Database URL: {:?}", &db_connection_str);
     let pool = PgPoolOptions::new()
         .max_connections(DB_MAX_CONNECTIONS)
         .acquire_timeout(DB_CONNECTION_TIMEOUT)
