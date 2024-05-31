@@ -27,6 +27,7 @@ jobs:
       postgres:
         image: postgres
         env:
+          POSTGRES_HOST: postgres
           POSTGRES_PASSWORD: mysecretpassword
         options: >-
           --health-cmd pg_isready
